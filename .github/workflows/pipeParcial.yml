@@ -1,0 +1,82 @@
+name: pipeParcial
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  pipeParcial:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: testing_db
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping --silent" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    env:
+      DB_CONNECTION: mysql
+      DB_DATABASE: testing_db
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Instalar PHP y Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo, pdo_mysql
+          coverage: none
+
+      - name: Instalar dependencias PHP
+        run: composer install --no-progress --prefer-dist --no-interaction
+
+      - name: Configurar entorno de Laravel
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Esperar MySQL
+        run: sleep 20
+
+      - name: Migrar base de datos
+        run: php artisan migrate --force
+
+      - name: Análisis estático con PHPStan
+        run: |
+          composer require --dev phpstan/phpstan
+          ./vendor/bin/phpstan analyse app --level=5
+
+      - name: Ejecutar pruebas con PHPUnit
+        run: php artisan test --testsuite=Unit,Feature
+
+      - name: Instalar Python y Locust
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias Python
+        run: |
+          pip install locust==2.23.1
+
+      - name: Levantar servidor Laravel
+        run: |
+          php artisan serve --host=0.0.0.0 --port=8000 &
+          sleep 10
+
+      - name: Pruebas de performance con Locust
+        run: |
+          locust -f locustfile.py --headless -u 50 -r 10 --run-time 30s --host=http://127.0.0.1:8000
+
+      - name: Todas las pruebas pasaron correctamente
+        if: success()
+        run: echo "las pruebas pasaron"
