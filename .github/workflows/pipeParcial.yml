@@ -48,15 +48,6 @@ jobs:
       - name: Verificar clases y métodos válidos con Composer
         run: composer dump-autoload
 
-      - name: Análisis estático con Larastan
-        run: ./vendor/bin/phpstan analyse --memory-limit=512M --level=max app/
-
-      - name: Comprobar vulnerabilidades en dependencias
-        run: composer audit || true
-
-      - name: Verificar clases y métodos válidos con Composer
-        run: composer dump-autoload
-
       - name: Copiar .env y generar APP_KEY
         run: |
           cp .env.example .env
