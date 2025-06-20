@@ -10,7 +10,6 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $query = Product::with('category');
-
         if ($request->has('category_id')) {
             $query->where('category_id', $request->category_id);
         }
@@ -51,12 +50,12 @@ class ProductController extends Controller
         return response()->json($product, 200);
     }
 
-public function destroy(Product $product)
-{
-    $product->delete();
+    public function destroy(Product $product)
+    {
+        $product->delete();
 
-    return redirect()->route('products.index');
-}
+        return redirect()->route('products.index');
+    }
 
     public function lowStock()
     {

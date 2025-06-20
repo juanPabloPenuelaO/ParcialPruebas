@@ -8,6 +8,7 @@ on:
 jobs:
   pipeParcial:
     runs-on: ubuntu-latest
+
     services:
       mysql:
         image: mysql:8.0
@@ -16,7 +17,11 @@ jobs:
           MYSQL_ROOT_PASSWORD: root
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping --silent" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
 
     env:
       DB_CONNECTION: mysql
@@ -30,7 +35,7 @@ jobs:
       - name: Checkout del código
         uses: actions/checkout@v4
 
-      - name: Instalar PHP y Composer
+      - name: Instalar PHP y extensiones necesarias
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
@@ -40,13 +45,16 @@ jobs:
       - name: Instalar dependencias PHP
         run: composer install --no-progress --prefer-dist --no-interaction
 
-      - name: Configurar entorno de Laravel
+      - name: Verificar clases y métodos válidos con Composer
+        run: composer dump-autoload
+
+      - name: Copiar .env y generar APP_KEY
         run: |
           cp .env.example .env
           php artisan key:generate
 
-      - name: Esperar MySQL
-        run: sleep 20
+      - name: Esperar a que MySQL esté listo
+        run: sleep 25
 
       - name: Migrar base de datos
         run: php artisan migrate --force
@@ -56,17 +64,16 @@ jobs:
           composer require --dev phpstan/phpstan
           ./vendor/bin/phpstan analyse app --level=5
 
-      - name: Ejecutar pruebas con PHPUnit
+      - name: Ejecutar pruebas unitarias y de integración
         run: php artisan test --testsuite=Unit,Feature
 
-      - name: Instalar Python y Locust
+      - name: Instalar Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Instalar dependencias Python
-        run: |
-          pip install locust==2.23.1
+      - name: Instalar Locust
+        run: pip install locust==2.23.1
 
       - name: Levantar servidor Laravel
         run: |
@@ -77,6 +84,6 @@ jobs:
         run: |
           locust -f locustfile.py --headless -u 50 -r 10 --run-time 30s --host=http://127.0.0.1:8000
 
-      - name: Todas las pruebas pasaron correctamente
+      - name: las pruebas pasaron correctamente
         if: success()
         run: echo "las pruebas pasaron"

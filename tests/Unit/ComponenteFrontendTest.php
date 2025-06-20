@@ -11,8 +11,8 @@ class ComponenteFrontendTest extends TestCase
     public function la_vista_muestra_productos_correctamente()
     {
         $products = collect([
-            (object)['name' => 'Laptop', 'stock' => 5],
-            (object)['name' => 'Mouse', 'stock' => 2],
+            (object) ['name' => 'Laptop', 'stock' => 5],
+            (object) ['name' => 'Mouse', 'stock' => 2],
         ]);
 
         $html = View::make('products.lowstock', ['products' => $products])->render();

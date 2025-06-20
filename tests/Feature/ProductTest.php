@@ -17,11 +17,9 @@ class ProductTest extends TestCase
         $categoria = Category::factory()->create();
         Product::factory()->count(3)->create(['category_id' => $categoria->id]);
 
-        $respuesta = $this->get('/products'); // SIN /api
+        $respuesta = $this->get('/products');
 
         $respuesta->assertStatus(200);
-        // Si es vista, podrías verificar contenido HTML, no JSON
-        // $respuesta->assertSee('Productos');
     }
 
     /** @test */
@@ -36,9 +34,8 @@ class ProductTest extends TestCase
             'category_id' => $categoria->id,
         ];
 
-        $respuesta = $this->post('/products', $datos); // SIN /api
+        $respuesta = $this->post('/products', $datos);
 
-        // Si redirige, verifica con:
         $respuesta->assertRedirect();
 
         $this->assertDatabaseHas('products', ['name' => 'Teclado']);

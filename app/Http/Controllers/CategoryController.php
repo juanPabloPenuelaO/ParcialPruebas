@@ -30,6 +30,7 @@ class CategoryController extends Controller
         return response()->json($categoria, 201);
     }
 
+    
     /**
      * Mostrar una categoría específica.
      */
