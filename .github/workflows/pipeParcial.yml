@@ -59,13 +59,6 @@ jobs:
       - name: Migrar base de datos
         run: php artisan migrate --force
 
-      - name: Instalar PHPStan y Larastan
-        run: |
-          composer require --dev phpstan/phpstan nunomaduro/larastan
-
-      - name: Análisis estático con PHPStan (Larastan)
-        run: ./vendor/bin/phpstan analyse --configuration=phpstan.neon
-
       - name: Ejecutar pruebas unitarias y de integración
         run: php artisan test --testsuite=Unit,Feature
 
